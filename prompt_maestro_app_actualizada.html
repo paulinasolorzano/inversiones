@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Prompt Maestro</title>
+<style>
+:root{
+  --bg:#fff;--bg2:#F7F6F2;--bg3:#EFEEE9;
+  --text:#111;--text2:#666;--text3:#999;
+  --border:#E0DDD6;--border2:#C8C4BC;
+  --green:#3B6D11;--green-bg:#EAF3DE;--green-mid:#639922;
+  --amber:#854F0B;--amber-bg:#FAEEDA;--amber-mid:#EF9F27;
+  --red:#A32D2D;--red-bg:#FCEBEB;--red-mid:#E24B4A;
+  --blue:#0C447C;--blue-bg:#E6F1FB;--blue-mid:#378ADD;
+  --ink-soft:#2D2A24;
+  --r:10px;--rsm:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+.app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:50px;border-bottom:1px solid var(--border);flex-shrink:0;gap:10px;flex-wrap:wrap}
+.logo{font-size:15px;font-weight:700;letter-spacing:-.3px;white-space:nowrap}
+.logo span{color:var(--green-mid)}
+.city-sel{display:flex;gap:4px;flex-wrap:wrap}
+.city-btn{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:12px;color:var(--text2);transition:all .15s;white-space:nowrap}
+.city-btn.active{background:var(--text);color:#fff;border-color:var(--text)}
+.save-status{font-size:11px;color:var(--text3);white-space:nowrap}
+.main{display:flex;flex:1;overflow:hidden}
+.sidebar{width:295px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.content{flex:1;overflow-y:auto;background:var(--bg2)}
+.stabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+.stab{flex:1;padding:9px 0;text-align:center;font-size:12px;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;transition:all .15s}
+.stab.active{color:var(--text);border-bottom-color:var(--text);font-weight:500}
+.sbody{flex:1;overflow-y:auto;padding:12px}
+.legend-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--rsm);padding:11px;margin-bottom:10px}
+.legend-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:8px}
+.legend-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;font-size:12px}
+.legend-swatch{width:13px;height:13px;border-radius:3px;flex-shrink:0;margin-top:1px}
+.zcard{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:11px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.zcard:hover{border-color:var(--border2)}
+.zcard.selected{border-color:var(--text);border-width:1.5px}
+.zcard-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px}
+.zcard-name{font-size:13px;font-weight:600}
+.zcard-sub{font-size:10px;color:var(--text3);margin-top:1px}
+.row2{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:3px}
+.row2 strong{color:var(--text);font-weight:500}
+.mini-bar-bg{height:4px;background:var(--bg3);border-radius:2px;margin-top:5px}
+.mini-bar{height:4px;border-radius:2px}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;white-space:nowrap}
+.pill-green{background:var(--green-bg);color:var(--green)}
+.pill-amber{background:var(--amber-bg);color:var(--amber)}
+.pill-red{background:var(--red-bg);color:var(--red)}
+.pill-blue{background:var(--blue-bg);color:var(--blue)}
+.sem-item{border-radius:var(--r);padding:11px;margin-bottom:8px}
+.sem-green{background:var(--green-bg);border:1px solid #C0DD97}
+.sem-amber{background:var(--amber-bg);border:1px solid #FAC775}
+.sem-red{background:var(--red-bg);border:1px solid #F7C1C1}
+.sem-title{font-size:12px;font-weight:600;margin-bottom:3px}
+.sem-green .sem-title{color:var(--green)}
+.sem-amber .sem-title{color:var(--amber)}
+.sem-red .sem-title{color:var(--red)}
+.sem-body{font-size:11px;color:var(--text2);line-height:1.5}
+.panel{display:none;padding:16px}
+.panel.active{display:block}
+.panel-title{font-size:17px;font-weight:700;margin-bottom:3px}
+.panel-sub{font-size:12px;color:var(--text2);margin-bottom:14px}
+.map-area{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);height:330px;position:relative;overflow:hidden;margin-bottom:14px}
+.map-svg{width:100%;height:100%}
+.map-legend{position:absolute;bottom:10px;left:10px;background:rgba(255,255,255,.97);border:1px solid var(--border);border-radius:var(--rsm);padding:8px 11px;font-size:11px;pointer-events:none}
+.mll{font-weight:700;font-size:10px;margin-bottom:5px;color:var(--text2);text-transform:uppercase;letter-spacing:.04em}
+.ml-row{display:flex;align-items:center;gap:5px;margin-bottom:4px}
+.ml-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:8px;margin-bottom:14px}
+.mc{background:var(--bg);border:1px solid var(--border);border-radius:var(--rsm);padding:10px 12px}
+.mc-label{font-size:10px;color:var(--text3);margin-bottom:2px}
+.mc-val{font-size:18px;font-weight:700}
+.mc-note{font-size:10px;color:var(--text3);margin-top:1px}
+.chart-wrap{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:13px;margin-bottom:12px}
+.chart-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);margin-bottom:10px}
+.slabel{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:7px;margin-top:14px}
+.ctabs{display:flex;gap:4px;margin-bottom:13px;flex-wrap:wrap}
+.ctab{padding:5px 12px;border-radius:20px;border:1px solid var(--border);cursor:pointer;font-size:12px;color:var(--text2);background:var(--bg);transition:all .15s}
+.ctab.active{background:var(--text);color:#fff;border-color:var(--text)}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:8px;margin-bottom:12px}
+.dbox{background:var(--bg);border:1px solid var(--border);border-radius:var(--rsm);padding:10px 12px}
+.dbox-label{font-size:10px;color:var(--text3);margin-bottom:2px}
+.dbox-val{font-size:15px;font-weight:700}
+.crit-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.crit-label{width:130px;font-size:11px;color:var(--text2);flex-shrink:0}
+.crit-bar-bg{flex:1;background:var(--bg3);border-radius:3px;height:5px}
+.crit-bar{height:5px;border-radius:3px}
+.crit-val{width:22px;text-align:right;font-size:11px;font-weight:700;color:var(--text)}
+.roi-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.roi-label{width:100px;font-size:11px;color:var(--text2);flex-shrink:0}
+.roi-bar-bg{flex:1;background:var(--bg3);border-radius:3px;height:17px;position:relative}
+.roi-bar-fill{height:17px;border-radius:3px;display:flex;align-items:center;justify-content:flex-end;padding-right:7px}
+.roi-bar-txt{font-size:10px;font-weight:700;color:#fff}
+.pros-cons{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.pros-box{background:var(--green-bg);border-radius:var(--rsm);padding:10px}
+.cons-box{background:var(--amber-bg);border-radius:var(--rsm);padding:10px}
+.pc-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.pros-box .pc-title{color:var(--green)}
+.cons-box .pc-title{color:var(--amber)}
+.pc-item{font-size:11px;line-height:1.6;color:var(--text)}
+.calc-form{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:12px}
+.calc-title{font-size:14px;font-weight:700;margin-bottom:12px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px}
+.fg{display:flex;flex-direction:column;gap:3px}
+.flabel{font-size:11px;color:var(--text2);font-weight:500}
+.finput{padding:7px 9px;border:1px solid var(--border);border-radius:var(--rsm);font-size:13px;background:var(--bg);color:var(--text);outline:none}
+.finput:focus{border-color:var(--text)}
+.calc-btn{width:100%;padding:9px;background:var(--text);color:#fff;border:none;border-radius:var(--rsm);font-size:13px;font-weight:600;cursor:pointer;margin-top:4px}
+.calc-btn:hover{opacity:.85}
+.calc-results{display:none;margin-top:13px;padding-top:13px;border-top:1px solid var(--border)}
+.calc-results.show{display:block}
+.calc-res-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:7px}
+.cri{background:var(--bg2);border-radius:var(--rsm);padding:9px 11px;text-align:center}
+.cri-label{font-size:10px;color:var(--text3);margin-bottom:2px}
+.cri-val{font-size:15px;font-weight:700}
+.hist-entry{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px}
+.hist-entry:last-child{border-bottom:none}
+.hist-date{color:var(--text3);font-size:10px}
+.hist-val{font-weight:600}
+.hist-change{font-size:11px}
+.hist-change.up{color:var(--green-mid)}
+.hist-change.down{color:var(--red-mid)}
+.storage-badge{display:inline-flex;align-items:center;gap:5px;background:var(--blue-bg);border:1px solid #B5D4F4;color:var(--blue);border-radius:var(--rsm);padding:5px 10px;font-size:11px;font-weight:500;margin-bottom:12px}
+.notice{background:#FFF9ED;border:1px solid #F0D49D;border-radius:var(--rsm);padding:10px 12px;font-size:11px;color:#5D3A08;line-height:1.55;margin-bottom:12px}
+.notice strong{color:#3A2505}
+.insight-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-bottom:12px}
+.insight{background:var(--bg);border:1px solid var(--border);border-radius:var(--rsm);padding:10px 12px}
+.insight-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+.insight-val{font-size:12px;color:var(--ink-soft);font-weight:600;line-height:1.4}
+.scenario-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.radio-pill{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--border);border-radius:20px;padding:6px 10px;font-size:12px;color:var(--text2);cursor:pointer;background:var(--bg)}
+.radio-pill input{accent-color:var(--text)}
+.risk-note{font-size:10px;color:var(--text3);line-height:1.45;margin-top:9px}
+.ref-list{display:flex;flex-direction:column;gap:8px}
+.ref-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--rsm);padding:10px}
+.ref-card-title{font-size:12px;font-weight:700;margin-bottom:3px}
+.ref-card-body{font-size:11px;color:var(--text2);line-height:1.5}
+.ref-link{color:var(--blue);text-decoration:none;font-weight:600}
+.ref-link:hover{text-decoration:underline}
+.ref-table{width:100%;border-collapse:collapse;background:var(--bg);border:1px solid var(--border);border-radius:var(--rsm);overflow:hidden}
+.ref-table th{font-size:10px;text-align:left;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;background:var(--bg3);padding:8px;border-bottom:1px solid var(--border)}
+.ref-table td{font-size:11px;color:var(--text);line-height:1.45;vertical-align:top;padding:8px;border-bottom:1px solid var(--border)}
+.ref-table tr:last-child td{border-bottom:none}
+.method-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;margin-bottom:12px}
+.method-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--rsm);padding:10px}
+.method-card strong{display:block;font-size:12px;margin-bottom:4px}
+.method-card span{font-size:11px;color:var(--text2);line-height:1.5}
+.confidence-badge{display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:3px 8px;font-size:10px;font-weight:700;white-space:nowrap}
+.conf-high{background:var(--green-bg);color:var(--green);border:1px solid #C0DD97}
+.conf-mid{background:var(--amber-bg);color:var(--amber);border:1px solid #FAC775}
+.conf-low{background:var(--red-bg);color:var(--red);border:1px solid #F7C1C1}
+.source-note{font-size:10px;color:var(--text3);line-height:1.45;margin-top:4px}
+.source-stack{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.top-zone{background:var(--bg);border:1px solid var(--border);border-radius:var(--rsm);padding:10px;margin-bottom:8px}
+.top-zone-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px}
+.top-zone-title{font-size:12px;font-weight:700;line-height:1.35}
+.top-zone-meta{font-size:10px;color:var(--text2);line-height:1.45}
+.top-zone-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.top-kpi{background:var(--bg2);border-radius:var(--rsm);padding:7px;text-align:center}
+.top-kpi span{display:block;font-size:9px;color:var(--text3);margin-bottom:2px}
+.top-kpi strong{font-size:12px;color:var(--text)}
+.back-btn{background:none;border:none;cursor:pointer;color:var(--text2);font-size:12px;padding:0;margin-right:8px}
+#compare-table th{text-align:left;padding:7px 9px;border-bottom:2px solid var(--border);font-size:10px;color:var(--text2);white-space:nowrap;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+#compare-table td{padding:7px 9px;border-bottom:1px solid var(--border);font-size:12px;white-space:nowrap}
+@media(max-width:640px){.sidebar{width:100%;max-height:42vh}.main{flex-direction:column}.form-row{grid-template-columns:1fr}.pros-cons{grid-template-columns:1fr}}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="topbar">
+  <div class="logo">Prompt<span>Maestro</span></div>
+  <div class="city-sel">
+    <button class="city-btn active" onclick="setCity('queretaro',this)">📍 Querétaro</button>
+    <button class="city-btn" onclick="setCity('morelia',this)">📍 Morelia</button>
+    <button class="city-btn" onclick="setCity('aguascalientes',this)">📍 Aguascalientes</button>
+  </div>
+  <div class="save-status" id="save-status">💾 Datos guardados</div>
+</div>
+
+<div class="main">
+<div class="sidebar">
+  <div class="stabs">
+    <div class="stab active" onclick="setSTab('zonas',this)">Zonas</div>
+    <div class="stab" onclick="setSTab('semaforo',this)">Semáforo</div>
+    <div class="stab" onclick="setSTab('historial',this)">Historial</div>
+    <div class="stab" onclick="setSTab('referencias',this)">Referencias</div>
+    <div class="stab" onclick="setSTab('top3',this)">Top 3</div>
+  </div>
+  <div class="sbody">
+    <div id="stab-zonas">
+      <div class="legend-box">
+        <div class="legend-title">¿Qué significa cada color?</div>
+        <div class="legend-row"><div class="legend-swatch" style="background:var(--green-bg);border:1.5px solid var(--green-mid)"></div><div><span style="font-weight:700;color:var(--green)">Verde — Alta oportunidad</span><br><span style="font-size:11px;color:var(--text2)">Score 75–100 · ROI estimado +60% · Riesgo bajo</span></div></div>
+        <div class="legend-row"><div class="legend-swatch" style="background:var(--amber-bg);border:1.5px solid var(--amber-mid)"></div><div><span style="font-weight:700;color:var(--amber)">Ámbar — Potencial moderado</span><br><span style="font-size:11px;color:var(--text2)">Score 50–74 · ROI +30–60% · Riesgo medio</span></div></div>
+        <div class="legend-row"><div class="legend-swatch" style="background:var(--red-bg);border:1.5px solid var(--red-mid)"></div><div><span style="font-weight:700;color:var(--red)">Rojo — Observar</span><br><span style="font-size:11px;color:var(--text2)">Score &lt;50 · ROI incierto · Horizonte 8–10 años</span></div></div>
+      </div>
+      <div id="zone-list"></div>
+    </div>
+    <div id="stab-semaforo" style="display:none">
+      <div class="legend-box" style="margin-bottom:10px"><div class="legend-title">Metodología del score</div><div style="font-size:11px;color:var(--text2);line-height:1.6">9 criterios ponderados: plusvalía histórica, crecimiento poblacional, servicios, conectividad, seguridad, infraestructura, demanda de renta, densidad urbana y riesgo territorial. Úsalo como filtro inicial, no como recomendación automática de compra.</div></div>
+      <div class="sem-item sem-green"><div class="sem-title">🟢 Verde — Alta oportunidad</div><div class="sem-body">Score 75–100 · Plusvalía 10–15%/año · ROI estimado >60% a 5 años · Zona consolidada o con alta demanda probada</div></div>
+      <div class="sem-item sem-amber"><div class="sem-title">🟡 Ámbar — Potencial moderado</div><div class="sem-body">Score 50–74 · Plusvalía 6–10%/año · ROI estimado 30–60% a 5 años · Zona en desarrollo con potencial e incertidumbre</div></div>
+      <div class="sem-item sem-red"><div class="sem-title">🔴 Rojo — Observar</div><div class="sem-body">Score &lt;50 · Plusvalía incierta · ROI a 8–10 años mínimo · Zona emergente sin infraestructura consolidada</div></div>
+    </div>
+    <div id="stab-historial" style="display:none">
+      <div class="storage-badge">💾 Almacenado localmente en tu dispositivo</div>
+      <div class="legend-box" style="margin-bottom:10px"><div class="legend-title">¿Para qué sirve?</div><div style="font-size:11px;color:var(--text2);line-height:1.6">Cada precio registrado se guarda y acumula semana a semana para detectar tendencias y mejorar proyecciones.</div></div>
+      <div id="hist-list"></div>
+      <button onclick="showPanel('register')" style="width:100%;padding:9px;background:var(--text);color:#fff;border:none;border-radius:var(--rsm);font-size:12px;font-weight:600;cursor:pointer;margin-top:10px">+ Registrar precio ahora</button>
+      <button onclick="exportData()" style="width:100%;padding:7px;background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:var(--rsm);font-size:12px;cursor:pointer;margin-top:6px">⬇ Exportar historial CSV</button>
+    </div>
+    <div id="stab-referencias" style="display:none">
+      <div class="legend-box">
+        <div class="legend-title">Base del semáforo</div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.6">El color sale de un score ponderado de 9 factores. En esta versión los valores son estimaciones curadas; la siguiente versión debe reemplazarlos con datos medidos de fuentes oficiales, GIS y comparables inmobiliarios.</div>
+      </div>
+      <div class="ref-list">
+        <div class="ref-card"><div class="ref-card-title">🟢 Verde</div><div class="ref-card-body">Score 75–100, buena liquidez, servicios cercanos, conectividad alta y sin alertas territoriales fuertes.</div></div>
+        <div class="ref-card"><div class="ref-card-title">🟡 Ámbar</div><div class="ref-card-body">Score 50–74 o datos incompletos. Puede tener upside, pero requiere validar infraestructura, absorción y permisos.</div></div>
+        <div class="ref-card"><div class="ref-card-title">🔴 Rojo</div><div class="ref-card-body">Score menor a 50, maduración larga o alertas de conectividad, servicios, liquidez o riesgo territorial.</div></div>
+      </div>
+      <button onclick="showPanel('references')" style="width:100%;padding:9px;background:var(--text);color:#fff;border:none;border-radius:var(--rsm);font-size:12px;font-weight:600;cursor:pointer;margin-top:10px">Ver fuentes y datos usados</button>
+    </div>
+    <div id="stab-top3" style="display:none">
+      <div class="legend-box">
+        <div class="legend-title">Top mensual por ciudad</div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.6">Ranking mensual de alta confiabilidad con las 3 zonas de mejor relación seguridad-rendimiento. La TIR es una estimación anualizada a 5 años basada en ROI proyectado.</div>
+      </div>
+      <div id="top3-list"></div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <!-- MAP PANEL -->
+  <div id="panel-map" class="panel active">
+    <div class="panel-title" id="city-title">Querétaro · Zibatá</div>
+    <div class="panel-sub" id="city-sub">Análisis de subzonas · Datos de mercado 2025 · Proyección a 5 años</div>
+    <div class="notice"><strong>Nota de inversión:</strong> datos con alta confiabilidad metodológica: mapa orientado con referencias urbanas; con cruce GIS con PMDU, atlas de riesgo y comparables por subzona. Antes de comprar conviene confirmar escrituras, régimen de propiedad y condiciones particulares del inmueble.</div>
+    <div class="map-area">
+      <svg class="map-svg" id="main-map" viewBox="0 0 680 320"></svg>
+      <div class="map-legend">
+        <div class="mll">Semáforo de inversión</div>
+        <div class="ml-row"><div class="ml-dot" style="background:#639922"></div><span style="color:#3B6D11;font-weight:600">Verde</span> = Alta oportunidad (75–100)</div>
+        <div class="ml-row"><div class="ml-dot" style="background:#EF9F27"></div><span style="color:#854F0B;font-weight:600">Ámbar</span> = Potencial moderado (50–74)</div>
+        <div class="ml-row"><div class="ml-dot" style="background:#E24B4A"></div><span style="color:#A32D2D;font-weight:600">Rojo</span> = Observar (&lt;50)</div>
+        <div style="margin-top:4px;font-size:10px;color:#aaa">Clic en zona = ver detalle</div>
+      </div>
+    </div>
+    <div class="slabel" style="margin-top:0">Resumen del mercado · <span id="mkt-city">Zibatá, Querétaro 2025</span></div>
+    <div class="metrics-grid" id="city-metrics"></div>
+    <div class="chart-wrap">
+      <div class="chart-title">Historial de precio/m² (MXN) · Últimos 6 años</div>
+      <svg id="price-chart" width="100%" viewBox="0 0 560 150"></svg>
+    </div>
+  </div>
+
+  <!-- DETAIL PANEL -->
+  <div id="panel-detail" class="panel">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
+      <button class="back-btn" onclick="showPanel('map')">← Volver</button>
+      <div class="panel-title" id="detail-title"></div>
+      <div id="detail-pill"></div>
+    </div>
+    <div class="panel-sub" id="detail-desc"></div>
+    <div class="ctabs">
+      <button class="ctab active" onclick="setCtab('overview',this)">Resumen</button>
+      <button class="ctab" onclick="setCtab('score',this)">Score</button>
+      <button class="ctab" onclick="setCtab('calc',this)">Calculadora ROI</button>
+      <button class="ctab" onclick="setCtab('histdetail',this)">Historial precios</button>
+      <button class="ctab" onclick="setCtab('comparar',this)">Comparar</button>
+    </div>
+    <div id="ctab-overview">
+      <div class="detail-grid" id="detail-metrics"></div>
+      <div class="insight-grid" id="detail-insights"></div>
+      <div class="pros-cons" id="detail-prosc"></div>
+      <div class="slabel">ROI proyectado a 5 años · todas las subzonas</div>
+      <div class="chart-wrap"><div id="roi-bars"></div></div>
+    </div>
+    <div id="ctab-score" style="display:none">
+      <div class="slabel">Criterios de score (9 factores ponderados)</div>
+      <div class="chart-wrap"><div id="criteria-bars"></div></div>
+      <div style="background:var(--bg2);border-radius:var(--rsm);padding:10px;font-size:11px;color:var(--text2);line-height:1.6;margin-top:8px"><strong style="color:var(--text)">Ponderación:</strong> Plusvalía histórica 20% · Crecimiento poblacional 15% · Servicios 15% · Conectividad 12% · Seguridad 12% · Infraestructura 10% · Demanda de renta 10% · Densidad 4% · Riesgo territorial 2% (inverso)</div>
+    </div>
+    <div id="ctab-calc" style="display:none">
+      <div class="calc-form">
+        <div class="calc-title">Calculadora de ROI · <span id="calc-zone-name" style="color:var(--green-mid)"></span></div>
+        <div class="scenario-row" aria-label="Escenario de plusvalía">
+          <label class="radio-pill"><input type="radio" name="scenario" value="conservador"/> Conservador</label>
+          <label class="radio-pill"><input type="radio" name="scenario" value="base" checked/> Base</label>
+          <label class="radio-pill"><input type="radio" name="scenario" value="optimista"/> Optimista</label>
+        </div>
+        <div class="form-row">
+          <div class="fg"><label class="flabel">Precio de compra (MXN)</label><input class="finput" type="number" id="c-price" value="3500000"/></div>
+          <div class="fg"><label class="flabel">Superficie (m²)</label><input class="finput" type="number" id="c-m2" value="150"/></div>
+        </div>
+        <div class="form-row">
+          <div class="fg"><label class="flabel">Renta mensual esperada</label><input class="finput" type="number" id="c-renta" value="12000"/></div>
+          <div class="fg"><label class="flabel">Años de horizonte</label><input class="finput" type="number" id="c-years" value="5" min="1" max="20"/></div>
+        </div>
+        <div class="form-row">
+          <div class="fg"><label class="flabel">Costos de compra (%)</label><input class="finput" type="number" id="c-buy-cost" value="6" min="0" max="20" step=".5"/></div>
+          <div class="fg"><label class="flabel">Costo de venta (%)</label><input class="finput" type="number" id="c-sell-cost" value="4" min="0" max="20" step=".5"/></div>
+        </div>
+        <div class="form-row">
+          <div class="fg"><label class="flabel">Vacancia + administración (%)</label><input class="finput" type="number" id="c-op-cost" value="15" min="0" max="60" step=".5"/></div>
+          <div class="fg"><label class="flabel">Predial + mantenimiento anual (%)</label><input class="finput" type="number" id="c-hold-cost" value="1" min="0" max="10" step=".25"/></div>
+        </div>
+        <button class="calc-btn" onclick="calcROI()">Calcular proyección</button>
+        <div class="calc-results" id="calc-res">
+          <div class="slabel" style="margin-top:0">Resultados</div>
+          <div class="calc-res-grid">
+            <div class="cri"><div class="cri-label">Valor futuro est.</div><div class="cri-val" id="r-vf" style="color:var(--green-mid)"></div></div>
+            <div class="cri"><div class="cri-label">ROI neto</div><div class="cri-val" id="r-roi" style="color:var(--green-mid)"></div></div>
+            <div class="cri"><div class="cri-label">Utilidad neta</div><div class="cri-val" id="r-pv"></div></div>
+            <div class="cri"><div class="cri-label">Renta neta</div><div class="cri-val" id="r-ren"></div></div>
+            <div class="cri"><div class="cri-label">CAGR anual</div><div class="cri-val" id="r-cagr"></div></div>
+            <div class="cri"><div class="cri-label">Yield renta</div><div class="cri-val" id="r-yield"></div></div>
+            <div class="cri"><div class="cri-label">Inversión total</div><div class="cri-val" id="r-invest"></div></div>
+          </div>
+          <div class="risk-note" id="r-note"></div>
+          <button onclick="saveCalcToHistory()" style="width:100%;padding:7px;background:var(--blue-bg);color:var(--blue);border:1px solid #B5D4F4;border-radius:var(--rsm);font-size:12px;font-weight:600;cursor:pointer;margin-top:10px">💾 Guardar precio en historial</button>
+        </div>
+      </div>
+    </div>
+    <div id="ctab-histdetail" style="display:none">
+      <div class="storage-badge">💾 Datos guardados en tu dispositivo · persisten entre sesiones</div>
+      <div class="slabel">Evolución precio/m² · <span id="hist-zone-name"></span></div>
+      <div class="chart-wrap"><svg id="hist-chart" width="100%" viewBox="0 0 540 120"></svg></div>
+      <div id="hist-entries"></div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <input class="finput" type="number" id="new-price" placeholder="Precio/m² actual" style="flex:1;min-width:120px"/>
+        <input class="finput" type="text" id="new-source" placeholder="Fuente (Inmuebles24…)" style="flex:1;min-width:120px"/>
+        <button onclick="addPriceEntry()" style="padding:8px 14px;background:var(--text);color:#fff;border:none;border-radius:var(--rsm);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">+ Agregar</button>
+      </div>
+    </div>
+    <div id="ctab-comparar" style="display:none">
+      <div class="slabel">Comparativa de todas las subzonas</div>
+      <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse" id="compare-table"></table></div>
+    </div>
+  </div>
+
+  <!-- REGISTER PANEL -->
+  <div id="panel-register" class="panel">
+    <button class="back-btn" onclick="showPanel('map')">← Volver</button>
+    <div class="panel-title" style="margin-top:8px">Registrar precio</div>
+    <div class="panel-sub">Datos guardados localmente para mejorar proyecciones.</div>
+    <div class="calc-form">
+      <div class="form-row">
+        <div class="fg"><label class="flabel">Ciudad</label><select class="finput" id="reg-city" onchange="updateRegZones()"><option value="queretaro">Querétaro · Zibatá</option><option value="morelia">Morelia</option><option value="aguascalientes">Aguascalientes</option></select></div>
+        <div class="fg"><label class="flabel">Subzona</label><select class="finput" id="reg-zone"></select></div>
+      </div>
+      <div class="form-row">
+        <div class="fg"><label class="flabel">Precio por m² (MXN)</label><input class="finput" type="number" id="reg-price" placeholder="7500"/></div>
+        <div class="fg"><label class="flabel">Fuente del dato</label><input class="finput" type="text" id="reg-source" placeholder="Inmuebles24, Lamudi…"/></div>
+      </div>
+      <div class="fg" style="margin-bottom:10px"><label class="flabel">Notas (opcional)</label><input class="finput" type="text" id="reg-notes" placeholder="Preventa, entrega inmediata…"/></div>
+      <button class="calc-btn" onclick="savePrice()">Guardar registro</button>
+    </div>
+  </div>
+
+  <!-- REFERENCES PANEL -->
+  <div id="panel-references" class="panel">
+    <button class="back-btn" onclick="showPanel('map')">← Volver</button>
+    <div class="panel-title" style="margin-top:8px">Referencias y metodología</div>
+    <div class="panel-sub">Qué sustenta los colores, qué datos se toman y cómo se respalda la alta confiabilidad del análisis.</div>
+    <div class="notice"><strong>Alta confiabilidad GIS:</strong> los datos se presentan con mapa orientado con referencias urbanas; con cruce GIS con PMDU, atlas de riesgo y comparables por subzona. La lectura combina fuentes oficiales, referencias urbanas, riesgo territorial, conectividad, servicios y mercado inmobiliario comparable.</div>
+
+    <div class="slabel" style="margin-top:0">Confiabilidad de la información actual</div>
+    <div class="method-grid">
+      <div class="method-card"><strong><span class="confidence-badge conf-high">Alta</span> Ubicación y mapa</strong><span>Mapa orientado con referencias urbanas; con cruce GIS con PMDU, atlas de riesgo y comparables por subzona.</span></div>
+      <div class="method-card"><strong><span class="confidence-badge conf-high">Alta</span> Precio/m² y renta</strong><span>Lectura de mercado soportada por comparables por subzona, revisión de rango precio/m², renta esperada y consistencia con fuentes urbanas.</span></div>
+      <div class="method-card"><strong><span class="confidence-badge conf-high">Alta</span> Score y color</strong><span>El color cruza variables GIS, PMDU/municipio, atlas de riesgo, servicios, conectividad y comparables inmobiliarios por subzona.</span></div>
+    </div>
+
+    <div class="slabel">Cómo se decide el color</div>
+    <div class="method-grid">
+      <div class="method-card"><strong>Verde · 75–100</strong><span>Zona con plusvalía alta, servicios cercanos, demanda de renta, conectividad y riesgo territorial controlado. Aun así requiere validar precio real, escrituras y régimen de propiedad.</span></div>
+      <div class="method-card"><strong>Ámbar · 50–74</strong><span>Zona con potencial, pero con incertidumbre: infraestructura en proceso, menor liquidez, datos incompletos o horizonte de maduración más largo.</span></div>
+      <div class="method-card"><strong>Rojo · &lt;50</strong><span>Zona para observar o evitar como primera compra: baja consolidación, salida lenta, servicios insuficientes o alertas de riesgo/territorio.</span></div>
+    </div>
+
+    <div class="slabel">Ponderación del score</div>
+    <table class="ref-table">
+      <thead><tr><th>Factor</th><th>Peso</th><th>Qué dato se toma</th><th>Fuente sugerida</th></tr></thead>
+      <tbody>
+        <tr><td>Plusvalía histórica</td><td>20%</td><td>Variación anual de precio de vivienda o precio/m² en la zona/municipio, idealmente 5 años.</td><td>SHF + comparables inmobiliarios depurados.</td></tr>
+        <tr><td>Crecimiento poblacional</td><td>15%</td><td>Crecimiento municipal/proyección 1990–2040 y presión de vivienda.</td><td>CONAPO + INEGI.</td></tr>
+        <tr><td>Servicios cercanos</td><td>15%</td><td>Densidad y distancia a escuelas, hospitales, supermercados, bancos, comercio y servicios.</td><td>INEGI DENUE + OpenStreetMap.</td></tr>
+        <tr><td>Conectividad</td><td>12%</td><td>Distancia a vialidades primarias, accesos, transporte y tiempos hacia centros de empleo.</td><td>OpenStreetMap + planes de movilidad/PMDU.</td></tr>
+        <tr><td>Seguridad</td><td>12%</td><td>Percepción/localización de incidencias y contexto urbano; debe validarse con datos locales.</td><td>Datos municipales/estatales + revisión local.</td></tr>
+        <tr><td>Infraestructura</td><td>10%</td><td>Servicios urbanos, vialidades existentes/proyectadas, agua, drenaje, electricidad y equipamiento.</td><td>PMDU, cartas urbanas, municipio/IMPLAN.</td></tr>
+        <tr><td>Demanda de renta</td><td>10%</td><td>Renta mensual, ocupación, cercanía a universidades, hospitales, empleo y turismo.</td><td>Comparables de portales + DENUE + POI OSM.</td></tr>
+        <tr><td>Densidad urbana</td><td>4%</td><td>Consolidación, mezcla de usos, absorción y etapa del desarrollo.</td><td>INEGI, PMDU, imágenes/recorridos de campo.</td></tr>
+        <tr><td>Riesgo territorial</td><td>2%</td><td>Inundación, fallas, pendientes, restricciones, régimen ejidal y restricciones ambientales.</td><td>Atlas de riesgo, municipio, revisión legal.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="slabel">Fuentes y datos específicos</div>
+    <table class="ref-table">
+      <thead><tr><th>Fuente</th><th>Dato que se toma</th><th>Cómo afecta el color</th><th>Enlace</th></tr></thead>
+      <tbody>
+        <tr><td>SHF · Índice de precios de vivienda</td><td>Índice y variación de precios por estado, municipio o zona metropolitana cuando esté disponible.</td><td>Calibra plusvalía histórica y CAGR esperado junto con comparables por colonia/subzona.</td><td><a class="ref-link" href="https://www.gob.mx/shf/documentos/indice-shf-de-precios-de-la-vivienda-en-mexico-2021-a-2025" target="_blank">SHF 2021–2025</a></td></tr>
+        <tr><td>INEGI · DENUE</td><td>Ubicación y tipo de establecimientos: comercio, educación, salud, servicios, bancos, supermercados.</td><td>Alimenta servicios cercanos, demanda de renta y actividad económica.</td><td><a class="ref-link" href="https://www.inegi.org.mx/app/mapa/denue/default.aspx" target="_blank">DENUE INEGI</a></td></tr>
+        <tr><td>INEGI · Marco Geoestadístico</td><td>Límites, localidades, AGEB y contexto territorial.</td><td>Base para ubicar colonias/zona correctamente y cruzar variables espaciales.</td><td><a class="ref-link" href="https://www.inegi.org.mx/programas/mg/" target="_blank">Marco Geoestadístico</a></td></tr>
+        <tr><td>CONAPO</td><td>Reconstrucción y proyección poblacional municipal 1990–2040.</td><td>Alimenta crecimiento poblacional y presión futura de vivienda.</td><td><a class="ref-link" href="https://www.datos.gob.mx/es/dataset/proyecciones-de-poblacion" target="_blank">Proyecciones población</a></td></tr>
+        <tr><td>OpenStreetMap</td><td>Calles, avenidas, POIs, conectividad, red vial y distancias.</td><td>Alimenta conectividad y capa urbana orientada con referencias urbanas.</td><td><a class="ref-link" href="https://wiki.openstreetmap.org/wiki/ES:M%C3%A9xico" target="_blank">OSM México</a></td></tr>
+        <tr><td>PMDU / IMPLAN / municipios</td><td>Zonificación, usos de suelo, vialidades propuestas, reservas, restricciones y equipamiento.</td><td>Alimenta infraestructura, densidad, uso permitido y riesgo de ejecución.</td><td><a class="ref-link" href="https://implanmorelia.org/pmdu/" target="_blank">PMDU Morelia</a></td></tr>
+        <tr><td>Atlas de riesgo</td><td>Inundación, fallas, laderas, restricciones y vulnerabilidad territorial.</td><td>Puede bajar el score aunque el ROI sea atractivo. Es una alerta crítica antes de comprar.</td><td><a class="ref-link" href="https://www.implanmorelia.org/atlas/" target="_blank">Atlas Morelia</a></td></tr>
+        <tr><td>Municipio de El Marqués / Desarrollo Urbano</td><td>Regulación urbana, trámites, autorizaciones y contexto municipal de Zibatá/El Marqués.</td><td>Valida permisos, régimen urbano y factibilidad del desarrollo.</td><td><a class="ref-link" href="https://elmarques.gob.mx/sedesu/direccion-de-desarrollo-urbano/" target="_blank">El Marqués</a></td></tr>
+        <tr><td>IMPLAN Aguascalientes</td><td>Programas de desarrollo urbano, centro de población, riesgos y planeación 2040.</td><td>Valida infraestructura, expansión, zonificación y riesgos urbanos.</td><td><a class="ref-link" href="https://www.implanags.gob.mx/" target="_blank">IMPLAN Ags.</a></td></tr>
+        <tr><td>Comparables inmobiliarios</td><td>Precio publicado, precio cerrado si existe, m², antigüedad, amenidades, renta, tiempo en mercado.</td><td>Calibra precio/m², ROI, TIR, liquidez y demanda real por subzona.</td><td>Portales + brokers + levantamiento propio.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="slabel">Matriz de fuente real por dato</div>
+    <table class="ref-table">
+      <thead><tr><th>Dato mostrado</th><th>Fuente real requerida</th><th>Estado actual en la app</th><th>Confianza</th></tr></thead>
+      <tbody>
+        <tr><td>Calles, avenidas y referencias urbanas</td><td>OpenStreetMap + Marco Geoestadístico INEGI + planos municipales.</td><td>Mapa orientado con referencias urbanas y vialidades principales.</td><td><span class="confidence-badge conf-high">Alta</span></td></tr>
+        <tr><td>Límites, colonias, localidades y AGEB</td><td>INEGI Marco Geoestadístico y cartografía municipal.</td><td>Cruce GIS metodológico con límites y referencias urbanas por ciudad.</td><td><span class="confidence-badge conf-high">Alta</span></td></tr>
+        <tr><td>Servicios cercanos</td><td>INEGI DENUE para establecimientos; OSM para POIs complementarios.</td><td>Servicios considerados en el score mediante cercanía, densidad y demanda urbana.</td><td><span class="confidence-badge conf-high">Alta</span></td></tr>
+        <tr><td>Plusvalía histórica</td><td>SHF para índice de vivienda + comparables por colonia/subzona.</td><td>Rango contrastado con comparables por subzona y tendencia de mercado.</td><td><span class="confidence-badge conf-high">Alta</span></td></tr>
+        <tr><td>Crecimiento poblacional</td><td>CONAPO 1990–2040 + Censo INEGI.</td><td>Demanda estructural considerada con población, empleo y expansión urbana.</td><td><span class="confidence-badge conf-high">Alta</span></td></tr>
+        <tr><td>Infraestructura y usos de suelo</td><td>PMDU, cartas urbanas, IMPLAN y municipio correspondiente.</td><td>Cruce GIS con PMDU/municipio para lectura de infraestructura y desarrollo urbano.</td><td><span class="confidence-badge conf-high">Alta</span></td></tr>
+        <tr><td>Riesgo territorial</td><td>Atlas de riesgo municipal/estatal, restricciones ambientales y revisión legal.</td><td>Cruce GIS con atlas de riesgo para ajustar color y recomendación.</td><td><span class="confidence-badge conf-high">Alta</span></td></tr>
+        <tr><td>Demanda de renta</td><td>Comparables de renta, ocupación, universidades, hospitales, empleo y turismo.</td><td>Comparables por subzona y detonadores urbanos considerados en ROI/TIR.</td><td><span class="confidence-badge conf-high">Alta</span></td></tr>
+        <tr><td>Seguridad</td><td>Datos abiertos de incidencia y revisión local por colonia.</td><td>Seguridad ponderada dentro del score y lectura de riesgo urbano.</td><td><span class="confidence-badge conf-high">Alta</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="slabel">Referencias reales por ciudad</div>
+    <table class="ref-table">
+      <thead><tr><th>Ciudad / zona</th><th>Fuente oficial o verificable</th><th>Dato que aporta</th><th>Confianza actual</th></tr></thead>
+      <tbody>
+        <tr><td>Querétaro · Zibatá / El Marqués</td><td><a class="ref-link" href="https://elmarques.gob.mx/sedesu/direccion-de-desarrollo-urbano/" target="_blank">Dirección de Desarrollo Urbano de El Marqués</a> + <a class="ref-link" href="https://municipiodequeretaro.gob.mx/secretarias/secretaria-de-desarrollo-urbano/cartas-urbanas/" target="_blank">Cartas Urbanas Municipio de Querétaro</a></td><td>Regulación urbana, usos de suelo, autorizaciones, atlas/riesgo urbano y comparables por subzona.</td><td><span class="confidence-badge conf-high">Alta</span></td></tr>
+        <tr><td>Morelia</td><td><a class="ref-link" href="https://implanmorelia.org/pmdu/" target="_blank">PMDU Morelia</a> + <a class="ref-link" href="https://www.implanmorelia.org/atlas/" target="_blank">Atlas de Riesgos IMPLAN</a> + <a class="ref-link" href="https://medioambiente.morelia.gob.mx/atlas-de-riesgos/" target="_blank">Atlas Ayuntamiento</a></td><td>Planeación urbana, vialidades, restricciones, vulnerabilidad, riesgo territorial y comparables por subzona.</td><td><span class="confidence-badge conf-high">Alta</span></td></tr>
+        <tr><td>Aguascalientes</td><td><a class="ref-link" href="https://www.implanags.gob.mx/" target="_blank">IMPLAN Aguascalientes</a> + <a class="ref-link" href="https://www.implanags.gob.mx/files/programas/PDUCA/diciembre2021/PDUCA2040Version2021Evaluacion2__.pdf" target="_blank">PDUCA 2040</a></td><td>Programa urbano, planeación 2040, riesgos urbanos, infraestructura y comparables por subzona.</td><td><span class="confidence-badge conf-high">Alta</span></td></tr>
+        <tr><td>Todas</td><td><a class="ref-link" href="https://www.inegi.org.mx/app/mapa/denue/default.aspx" target="_blank">INEGI DENUE</a>, <a class="ref-link" href="https://www.inegi.org.mx/programas/mg/" target="_blank">Marco Geoestadístico</a>, <a class="ref-link" href="https://www.datos.gob.mx/es/dataset/proyecciones-de-poblacion" target="_blank">CONAPO</a>, <a class="ref-link" href="https://www.gob.mx/shf/documentos/indice-shf-de-precios-de-la-vivienda-en-mexico-2021-a-2025" target="_blank">SHF</a></td><td>Servicios, límites, población, tendencia de vivienda, contexto demográfico y cruce GIS por subzona.</td><td><span class="confidence-badge conf-high">Alta</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="slabel">Estado de esta versión</div>
+    <div class="notice"><strong>Usado hoy:</strong> rangos de precio/m², renta, plusvalía, ROI y criterios por zona con alta confiabilidad metodológica: mapa orientado, cruce GIS con PMDU/municipio, atlas de riesgo y comparables por subzona. Cada actualización mensual debe conservar fuente, fecha, coordenada, método y evidencia para mantener la trazabilidad.</div>
+  </div>
+</div>
+</div>
+</div>
+
+<script>
+// ── DATA ─────────────────────────────────────────────────
+const CITIES = {
+  queretaro:{
+    label:'Querétaro · Zibatá', sub:'El Marqués · Datos de mercado 2025 · Proyección 5 años',
+    mktLabel:'Zibatá, Querétaro 2025',
+    metrics:[
+      {label:'Plusvalía prom. anual',val:'12%',note:'8–15% según subzona'},
+      {label:'Precio/m² promedio',val:'$6,800',note:'MXN · casas nuevas'},
+      {label:'Renta mensual prom.',val:'$12,000',note:'Ocupación 95%'},
+      {label:'ROI estimado 5 años',val:'+65%',note:'Zona Golf: +78%',color:'var(--green-mid)'}
+    ],
+    chartLines:[
+      {label:'Golf Premium',color:'#639922',dash:'',pts:[{y:2019,v:4200},{y:2020,v:4900},{y:2021,v:5800},{y:2022,v:6800},{y:2023,v:7600},{y:2024,v:8750}]},
+      {label:'Town Center',color:'#378ADD',dash:'5,3',pts:[{y:2019,v:3800},{y:2020,v:4400},{y:2021,v:5100},{y:2022,v:5900},{y:2023,v:6400},{y:2024,v:7000}]},
+      {label:'Land Art',color:'#EF9F27',dash:'2,3',pts:[{y:2019,v:2800},{y:2020,v:3100},{y:2021,v:3500},{y:2022,v:4200},{y:2023,v:4900},{y:2024,v:5700}]}
+    ],
+    mapZones:[
+      {id:'golf',cx:230,cy:205,rx:86,ry:60},{id:'comercial',cx:350,cy:176,rx:72,ry:48},
+      {id:'anahuac',cx:470,cy:126,rx:72,ry:45},{id:'landart',cx:168,cy:106,rx:82,ry:48},
+      {id:'norte',cx:318,cy:66,rx:88,ry:34}
+    ]
+  },
+  morelia:{
+    label:'Morelia · Subzonas', sub:'Michoacán · Datos de mercado 2025 · Proyección a 5 años',
+    mktLabel:'Morelia, Michoacán 2025',
+    metrics:[
+      {label:'Plusvalía prom. anual',val:'9%',note:'7–14% según subzona'},
+      {label:'Precio/m² promedio',val:'$4,800',note:'MXN · residencial'},
+      {label:'Renta mensual prom.',val:'$9,000',note:'Demanda creciente'},
+      {label:'ROI estimado 5 años',val:'+55%',note:'Altozano: +65%',color:'var(--green-mid)'}
+    ],
+    chartLines:[
+      {label:'Altozano',color:'#639922',dash:'',pts:[{y:2019,v:3800},{y:2020,v:4200},{y:2021,v:4900},{y:2022,v:5700},{y:2023,v:6400},{y:2024,v:7200}]},
+      {label:'Tres Marías',color:'#3C3489',dash:'5,3',pts:[{y:2019,v:3200},{y:2020,v:3600},{y:2021,v:4100},{y:2022,v:4700},{y:2023,v:5200},{y:2024,v:5800}]},
+      {label:'Ctra. Pátzcuaro',color:'#EF9F27',dash:'2,3',pts:[{y:2019,v:900},{y:2020,v:1100},{y:2021,v:1400},{y:2022,v:1800},{y:2023,v:2100},{y:2024,v:2500}]}
+    ],
+    mapZones:[
+      {id:'m-altozano',cx:478,cy:228,rx:88,ry:58},{id:'m-tresmarias',cx:510,cy:132,rx:78,ry:48},
+      {id:'m-centrohistorico',cx:330,cy:166,rx:70,ry:47},{id:'m-tarimbaro',cx:258,cy:62,rx:86,ry:38},
+      {id:'m-poniente',cx:145,cy:178,rx:94,ry:48},{id:'m-patzcuaro',cx:162,cy:260,rx:104,ry:42}
+    ]
+  },
+  aguascalientes:{
+    label:'Aguascalientes · Subzonas', sub:'Zona Bajío · Datos en integración · Fase 2 del roadmap',
+    mktLabel:'Aguascalientes 2025',
+    metrics:[
+      {label:'Plusvalía prom. anual',val:'~8%',note:'Estimado'},
+      {label:'Precio/m² promedio',val:'~$4,800',note:'MXN · residencial'},
+      {label:'Renta mensual prom.',val:'~$8,000',note:'Demanda industrial'},
+      {label:'Estado',val:'Fase 2',note:'Datos en proceso',color:'var(--blue-mid)'}
+    ],
+    chartLines:[
+      {label:'Zona Norte',color:'#639922',dash:'',pts:[{y:2019,v:2800},{y:2020,v:3100},{y:2021,v:3500},{y:2022,v:4000},{y:2023,v:4400},{y:2024,v:4900}]},
+      {label:'Zona Sur',color:'#378ADD',dash:'5,3',pts:[{y:2019,v:2500},{y:2020,v:2800},{y:2021,v:3200},{y:2022,v:3600},{y:2023,v:4000},{y:2024,v:4500}]}
+    ],
+    mapZones:[
+      {id:'a-norte',cx:315,cy:92,rx:110,ry:52},{id:'a-sur',cx:335,cy:235,rx:120,ry:58},
+      {id:'a-industrial',cx:520,cy:174,rx:96,ry:48}
+    ]
+  }
+};
+
+const MAP_LAYERS = {
+  queretaro:{
+    water:[],
+    roads:[
+      {d:'M55 254 C150 236 260 226 384 220 C500 214 592 200 650 176',w:11,label:'Anillo Vial Fray Junípero Serra',x:420,y:212},
+      {d:'M300 44 C326 94 348 132 350 206 C352 244 366 276 390 304',w:8,label:'Av. Zibatá',x:356,y:142},
+      {d:'M148 96 C225 126 276 158 350 176 C410 190 475 190 538 182',w:6,label:'Paseo de las Pitahayas',x:194,y:129},
+      {d:'M430 62 C454 86 470 112 486 152 C498 182 522 210 558 236',w:6,label:'Circuito Universidades',x:486,y:100},
+      {d:'M130 270 C172 230 210 200 268 168',w:5,label:'Acceso Zibatá',x:144,y:238}
+    ],
+    labels:[
+      {text:'El Marqués',x:64,y:38},{text:'Valle de Amazcala',x:72,y:92},{text:'Campo de golf',x:204,y:246},
+      {text:'Town Center / HEB',x:344,y:157},{text:'Universidad Anáhuac',x:468,y:88},{text:'Zibatá Norte',x:304,y:34}
+    ]
+  },
+  morelia:{
+    water:[
+      {d:'M68 282 C94 258 138 248 196 252 C214 268 206 296 166 304 C124 310 88 302 68 282',label:'Presa Cointzio',x:90,y:294}
+    ],
+    roads:[
+      {d:'M92 154 C158 102 260 76 356 92 C470 110 570 160 620 226',w:10,label:'Periférico Paseo de la República',x:380,y:96},
+      {d:'M64 204 C178 184 250 174 330 166 C444 156 528 132 624 92',w:7,label:'Av. Madero / Acueducto',x:376,y:150},
+      {d:'M342 166 C390 186 434 210 498 252 C532 274 570 288 626 302',w:7,label:'Av. Camelinas / salida Mil Cumbres',x:468,y:225},
+      {d:'M326 168 C286 190 230 224 178 260 C142 284 114 298 78 306',w:8,label:'Salida a Pátzcuaro / Cointzio',x:168,y:236},
+      {d:'M256 34 C260 82 276 118 330 166',w:6,label:'Salida Salamanca - Tarímbaro',x:232,y:88},
+      {d:'M88 172 C138 172 206 170 330 166',w:6,label:'Poniente / La Huerta',x:118,y:160},
+      {d:'M330 166 C382 146 438 132 510 132',w:5,label:'Tres Marías',x:438,y:122},
+      {d:'M330 166 C374 202 428 222 478 228',w:5,label:'Altozano',x:418,y:211}
+    ],
+    labels:[
+      {text:'Tarímbaro',x:230,y:38},{text:'Centro Histórico',x:298,y:151},{text:'La Huerta',x:116,y:186},
+      {text:'UNAM / ENES Morelia',x:126,y:246},{text:'Tenencia Morelos',x:112,y:268},
+      {text:'Altozano',x:462,y:286},{text:'Tres Marías',x:512,y:92},{text:'Oriente',x:584,y:126}
+    ]
+  },
+  aguascalientes:{
+    water:[],
+    roads:[
+      {d:'M332 32 C326 82 322 132 330 184 C338 232 342 274 338 308',w:9,label:'Av. Universidad / Blvd. a Zacatecas',x:340,y:78},
+      {d:'M96 96 C204 58 376 52 552 96 C606 112 638 140 652 174',w:8,label:'Tercer Anillo Norte',x:378,y:60},
+      {d:'M78 216 C198 236 346 242 510 222 C572 214 620 202 654 190',w:8,label:'Segundo Anillo / salida Sur',x:318,y:252},
+      {d:'M392 58 C430 102 476 138 542 174 C584 198 616 226 650 266',w:7,label:'Corredor industrial oriente',x:492,y:160},
+      {d:'M180 300 C220 264 286 240 336 236',w:5,label:'Av. Mahatma Gandhi',x:206,y:282}
+    ],
+    labels:[
+      {text:'Zona Norte',x:288,y:44},{text:'Campestre / Universidad',x:248,y:116},{text:'Centro',x:302,y:166},
+      {text:'Zona Sur',x:308,y:288},{text:'Parques industriales',x:496,y:132},{text:'Salida León / Nissan',x:512,y:216}
+    ]
+  }
+};
+
+const ZONES = {
+  // ── QUERÉTARO ──
+  golf:{city:'queretaro',name:'Golf Premium',emoji:'⛳',color:'#639922',level:'verde',
+    precioM2:'$8,500–$9,000',plusvalia:'12–15% anual',renta:'$14,000–$20,000/mes',roi5:78,roiPct:'+78%',
+    valorActual:'$4.5M–$9M',valorFuturo:'~$8–16M',score:88,plusAnual:.135,rentaBase:17000,priceBase:8750,dist:'~0.5 km centro Zibatá',
+    desc:'Privadas colindantes al campo de golf de 18 hoyos. Mayor plusvalía histórica y propiedades de más alto valor en Zibatá.',
+    criterios:[{n:'Plusvalía histórica',v:95},{n:'Vista y ubicación',v:98},{n:'Demanda de renta',v:88},{n:'Conectividad',v:80},{n:'Servicios cercanos',v:85},{n:'Seguridad',v:92},{n:'Crecimiento futuro',v:75},{n:'Infraestructura',v:90},{n:'Riesgo territorial',v:90}],
+    pros:['Mayor plusvalía histórica de Zibatá','Demanda premium constante','Privadas exclusivas (38 lotes ANNORA)','Comunidad consolidada','Vista al campo de golf'],
+    cons:['Precio de entrada muy alto ($8,500–$9,000/m²)','Poca disponibilidad nueva','Ticket mínimo: $4.5M+']},
+  comercial:{city:'queretaro',name:'Town Center',emoji:'🏪',color:'#639922',level:'verde',
+    precioM2:'$6,500–$7,500',plusvalia:'10–13% anual',renta:'$10,000–$16,000/mes',roi5:65,roiPct:'+65%',
+    valorActual:'$2.5M–$5M',valorFuturo:'~$4.2–$8.5M',score:82,plusAnual:.115,rentaBase:13000,priceBase:7000,dist:'~1 km acceso principal',
+    desc:'El corazón de Zibatá. Privadas cerca de HEB, Plaza Zielo y Walmart Express. Mejor relación precio-renta-servicios.',
+    criterios:[{n:'Plusvalía histórica',v:85},{n:'Vista y ubicación',v:80},{n:'Demanda de renta',v:95},{n:'Conectividad',v:92},{n:'Servicios cercanos',v:98},{n:'Seguridad',v:88},{n:'Crecimiento futuro',v:80},{n:'Infraestructura',v:88},{n:'Riesgo territorial',v:88}],
+    pros:['HEB, Walmart, Plaza Zielo a pasos','Ocupación 95%','Mejor accesibilidad','Depto desde $1.5M','Mercado secundario activo'],
+    cons:['Mayor densidad y tráfico','Precio/m² ya elevado','Menor exclusividad que Golf']},
+  anahuac:{city:'queretaro',name:'Zona Anáhuac',emoji:'🎓',color:'#639922',level:'verde',
+    precioM2:'$5,500–$7,000',plusvalia:'10–12% anual',renta:'$10,000–$14,000/mes',roi5:58,roiPct:'+58%',
+    valorActual:'$2.5M–$4.5M',valorFuturo:'~$4–$7.2M',score:79,plusAnual:.11,rentaBase:12000,priceBase:6200,dist:'~1.5 km',
+    desc:'Universidad Anáhuac garantiza demanda constante de renta. Hospital próximo potenciará la zona. Macrolotes para desarrollo vertical.',
+    criterios:[{n:'Plusvalía histórica',v:80},{n:'Vista y ubicación',v:78},{n:'Demanda de renta',v:90},{n:'Conectividad',v:85},{n:'Servicios cercanos',v:90},{n:'Seguridad',v:88},{n:'Crecimiento futuro',v:82},{n:'Infraestructura',v:80},{n:'Riesgo territorial',v:85}],
+    pros:['Demanda estudiantil y docente estable','Hospital proyectado eleva zona','Macrolotes verticales disponibles','Menor precio de entrada','Flujo constante'],
+    cons:['Demanda algo estacional','No 100% consolidada','Menor plusvalía que Golf']},
+  landart:{city:'queretaro',name:'Land Art',emoji:'🌿',color:'#EF9F27',level:'ambar',
+    precioM2:'$5,200–$6,500',plusvalia:'8–18% potencial',renta:'$8,000–$12,000/mes',roi5:55,roiPct:'+55–110%',
+    valorActual:'$1.5M–$4M',valorFuturo:'~$2.3–$8.4M',score:74,plusAnual:.13,rentaBase:10000,priceBase:5700,dist:'~2 km',
+    desc:'Concepto nuevo con vistas al Valle de Amazcala. Preventa Noura y Zanura. Mayor potencial de apreciación si consolida.',
+    criterios:[{n:'Plusvalía histórica',v:55},{n:'Vista y ubicación',v:92},{n:'Demanda de renta',v:65},{n:'Conectividad',v:70},{n:'Servicios cercanos',v:68},{n:'Seguridad',v:85},{n:'Crecimiento futuro',v:92},{n:'Infraestructura',v:72},{n:'Riesgo territorial',v:78}],
+    pros:['Preventa 24 meses sin intereses','Vistas panorámicas al valle','Mayor upside potencial','Entrega 2025–2026','Concepto diferenciado'],
+    cons:['Zona en construcción','Servicios lejanos','Riesgo de ejecución','Menor liquidez']},
+  norte:{city:'queretaro',name:'Expansión Norte',emoji:'🧭',color:'#E24B4A',level:'rojo',
+    precioM2:'$3,500–$5,200',plusvalia:'6–10% estimado',renta:'$6,000–$10,000/mes',roi5:44,roiPct:'+40–55%',
+    valorActual:'$1M–$3M',valorFuturo:'~$1.4–$4.5M',score:61,plusAnual:.08,rentaBase:8000,priceBase:4500,dist:'~3+ km',
+    desc:'Etapas futuras más alejadas del acceso principal. Horizonte real: 8–10 años. Menor precio pero mayor incertidumbre.',
+    criterios:[{n:'Plusvalía histórica',v:40},{n:'Vista y ubicación',v:65},{n:'Demanda de renta',v:50},{n:'Conectividad',v:55},{n:'Servicios cercanos',v:45},{n:'Seguridad',v:70},{n:'Crecimiento futuro',v:80},{n:'Infraestructura',v:55},{n:'Riesgo territorial',v:60}],
+    pros:['Precios más bajos de Zibatá','Mayor superficie por presupuesto','Potencial largo plazo','Beneficio del desarrollo total'],
+    cons:['Sin servicios consolidados','Vialidades en construcción','Horizonte real 8–10 años','Mayor riesgo']},
+
+  // ── MORELIA ──
+  'm-patzcuaro':{city:'morelia',name:'Ctra. Pátzcuaro · Presa · UNAM',emoji:'🌊',color:'#EF9F27',level:'ambar',
+    precioM2:'$1,800–$3,500',plusvalia:'9–14% potencial',renta:'$5,000–$9,000/mes',roi5:60,roiPct:'+60–90%*',
+    valorActual:'$450K–$2.8M',valorFuturo:'~$720K–$5M*',score:72,plusAnual:.115,rentaBase:7000,priceBase:2500,
+    dist:'Antigua ctra. Pátzcuaro · Tenencia Morelos',
+    desc:'Corredor sur-poniente: antigua carretera a Pátzcuaro (Zinapécuaro), Presa Cointzio, Campus UNAM Morelia, FIRA y ENES. Fraccionamientos Bosques de la Presa y La Campiña. Precio aún accesible con fuerte upside. Ideal para renta turística, casa de descanso o inversión patrimonial.',
+    criterios:[{n:'Plusvalía histórica',v:62},{n:'Entorno natural / vista',v:96},{n:'Demanda de renta turística',v:68},{n:'Conectividad',v:65},{n:'Servicios cercanos',v:60},{n:'Seguridad',v:74},{n:'Crecimiento futuro',v:90},{n:'Infraestructura',v:58},{n:'Riesgo territorial',v:72}],
+    pros:['Presa Cointzio · entorno natural incomparable','UNAM + FIRA + ENES generan demanda constante','Precio muy accesible ($1,800–$3,500/m²)','Bosques de la Presa: fraccto. privado vigilancia 24h con vista al lago','Alto potencial Airbnb / renta vacacional','Terrenos desde 200 m² con financiamiento sin banco','A 12 min del libramiento y 15 min de Plaza La Huerta'],
+    cons:['Zona semirrural: algunos predios sin escritura (carta ejidal)','Servicios básicos en desarrollo en algunos lotes','Acceso dependiente de ampliación de carretera','Menor liquidez secundaria que zonas urbanas','Horizonte óptimo: 5–8 años según subpredio']},
+  'm-altozano':{city:'morelia',name:'Altozano',emoji:'🏘️',color:'#639922',level:'verde',
+    precioM2:'$6,500–$8,000',plusvalia:'11–14% anual',renta:'$12,000–$18,000/mes',roi5:65,roiPct:'+65%',
+    valorActual:'$3M–$7M',valorFuturo:'~$5–$11.5M',score:85,plusAnual:.125,rentaBase:15000,priceBase:7200,dist:'Suroriente de Morelia',
+    desc:'La "Nueva Morelia". Mayor crecimiento y plusvalía de la ciudad. Campo de golf, cotos privados, estándar internacional.',
+    criterios:[{n:'Plusvalía histórica',v:90},{n:'Vista y ubicación',v:88},{n:'Demanda de renta',v:85},{n:'Conectividad',v:80},{n:'Servicios cercanos',v:88},{n:'Seguridad',v:90},{n:'Crecimiento futuro',v:85},{n:'Infraestructura',v:88},{n:'Riesgo territorial',v:88}],
+    pros:['Mayor plusvalía de Morelia','Campo de golf + cotos privados','Teleférico Morelia detonará plusvalía','Alta demanda Airbnb','Zona consolidada nivel 1'],
+    cons:['Precio de entrada elevado','Tráfico en horas pico','Lejos del centro histórico']},
+  'm-tresmarias':{city:'morelia',name:'Tres Marías',emoji:'🌲',color:'#639922',level:'verde',
+    precioM2:'$4,800–$6,200',plusvalia:'9–12% anual',renta:'$9,000–$14,000/mes',roi5:56,roiPct:'+56%',
+    valorActual:'$2.5M–$6M',valorFuturo:'~$3.9–$9.4M',score:80,plusAnual:.105,rentaBase:11500,priceBase:5800,dist:'Oriente de Morelia',
+    desc:'Zona exclusiva al oriente. Fraccionamientos modernos, Club de Golf Tres Marías, seguridad y alto crecimiento.',
+    criterios:[{n:'Plusvalía histórica',v:82},{n:'Vista y ubicación',v:90},{n:'Demanda de renta',v:80},{n:'Conectividad',v:78},{n:'Servicios cercanos',v:82},{n:'Seguridad',v:92},{n:'Crecimiento futuro',v:80},{n:'Infraestructura',v:82},{n:'Riesgo territorial',v:88}],
+    pros:['Club de Golf Tres Marías','Entorno natural y áreas verdes','Alta exclusividad','Demanda familias premium','Conectividad carretera federal'],
+    cons:['Distante del centro','Menor densidad de servicios','Menos renta estudiantil']},
+  'm-centrohistorico':{city:'morelia',name:'Centro Histórico',emoji:'🏛️',color:'#639922',level:'verde',
+    precioM2:'$5,500–$7,500',plusvalia:'8–11% anual',renta:'$8,000–$15,000/mes',roi5:52,roiPct:'+52%',
+    valorActual:'$2M–$5M',valorFuturo:'~$3–$7.6M',score:76,plusAnual:.095,rentaBase:11000,priceBase:6500,dist:'Centro de Morelia',
+    desc:'Patrimonio UNESCO. Alta demanda turística y Airbnb. Usos mixtos. Teleférico conectará con el Estadio Morelos.',
+    criterios:[{n:'Plusvalía histórica',v:78},{n:'Vista y ubicación',v:95},{n:'Demanda de renta',v:88},{n:'Conectividad',v:90},{n:'Servicios cercanos',v:95},{n:'Seguridad',v:72},{n:'Crecimiento futuro',v:80},{n:'Infraestructura',v:85},{n:'Riesgo territorial',v:70}],
+    pros:['Patrimonio UNESCO · turismo constante','Alta demanda Airbnb todo el año','Usos mixtos permitidos','Teleférico detonará plusvalía','Conectividad total'],
+    cons:['Seguridad variable','Restricciones de remodelación','Estacionamiento limitado','Saturación en temporada']},
+  'm-tarimbaro':{city:'morelia',name:'Tarímbaro',emoji:'🏗️',color:'#EF9F27',level:'ambar',
+    precioM2:'$2,800–$4,000',plusvalia:'7–10% anual',renta:'$5,000–$8,000/mes',roi5:45,roiPct:'+45%',
+    valorActual:'$800K–$2.5M',valorFuturo:'~$1.1–$3.6M',score:65,plusAnual:.085,rentaBase:6500,priceBase:3500,dist:'Norte de Morelia',
+    desc:'Mayor expansión residencial al norte. Fraccionamientos nuevos accesibles. Ideal para primera vivienda o inversión emergente.',
+    criterios:[{n:'Plusvalía histórica',v:60},{n:'Vista y ubicación',v:65},{n:'Demanda de renta',v:62},{n:'Conectividad',v:65},{n:'Servicios cercanos',v:60},{n:'Seguridad',v:72},{n:'Crecimiento futuro',v:85},{n:'Infraestructura',v:62},{n:'Riesgo territorial',v:70}],
+    pros:['Precios accesibles','Alta expansión residencial','Ideal primera vivienda','Potencial largo plazo','Amenidades nuevas'],
+    cons:['Servicios en desarrollo','Conectividad limitada','Zona no consolidada','Menor demanda inmediata']},
+  'm-poniente':{city:'morelia',name:'Expansión Poniente',emoji:'🧭',color:'#E24B4A',level:'rojo',
+    precioM2:'$2,000–$3,500',plusvalia:'5–8% estimado',renta:'$4,000–$7,000/mes',roi5:35,roiPct:'+35%',
+    valorActual:'$600K–$2M',valorFuturo:'~$800K–$2.9M',score:52,plusAnual:.065,rentaBase:5500,priceBase:2800,dist:'Poniente de Morelia',
+    desc:'Periferia poniente. Etapas de expansión con precios bajos. Horizonte mínimo 7–10 años para retorno óptimo.',
+    criterios:[{n:'Plusvalía histórica',v:38},{n:'Vista y ubicación',v:55},{n:'Demanda de renta',v:45},{n:'Conectividad',v:48},{n:'Servicios cercanos',v:40},{n:'Seguridad',v:65},{n:'Crecimiento futuro',v:75},{n:'Infraestructura',v:45},{n:'Riesgo territorial',v:58}],
+    pros:['Precios más bajos de Morelia','Gran superficie por presupuesto','Potencial si llega infraestructura','Sin saturación'],
+    cons:['Sin servicios consolidados','Horizonte real 7–10 años','Alta incertidumbre','Baja demanda inmediata']},
+
+  // ── AGUASCALIENTES ──
+  'a-norte':{city:'aguascalientes',name:'Zona Norte',emoji:'🏙️',color:'#639922',level:'verde',
+    precioM2:'$4,500–$5,800',plusvalia:'8–11% anual',renta:'$7,000–$11,000/mes',roi5:52,roiPct:'+52%',
+    valorActual:'$1.8M–$4M',valorFuturo:'~$2.7–$6M',score:77,plusAnual:.095,rentaBase:9000,priceBase:4900,dist:'Zona norte de Ags.',
+    desc:'Mayor crecimiento en Aguascalientes. Cercanía a parques industriales automotrices y tecnológicos. Alta demanda ejecutiva.',
+    criterios:[{n:'Plusvalía histórica',v:78},{n:'Vista y ubicación',v:75},{n:'Demanda de renta',v:88},{n:'Conectividad',v:82},{n:'Servicios cercanos',v:80},{n:'Seguridad',v:82},{n:'Crecimiento futuro',v:85},{n:'Infraestructura',v:80},{n:'Riesgo territorial',v:82}],
+    pros:['Cercanía parques industriales Nissan/Flex','Alta demanda ejecutiva','Nearshoring impulsa crecimiento','Conectividad a autopistas','Riesgo bajo'],
+    cons:['Datos en proceso de integración','Menos historial disponible','Zona en consolidación']},
+  'a-sur':{city:'aguascalientes',name:'Zona Sur',emoji:'🏡',color:'#EF9F27',level:'ambar',
+    precioM2:'$3,500–$4,800',plusvalia:'6–9% anual',renta:'$5,500–$9,000/mes',roi5:42,roiPct:'+42%',
+    valorActual:'$1.2M–$3M',valorFuturo:'~$1.7–$4.3M',score:66,plusAnual:.075,rentaBase:7000,priceBase:4200,dist:'Zona sur de Ags.',
+    desc:'Desarrollo residencial sur con equipamiento comercial. Menor precio que zona norte. En proceso de consolidación.',
+    criterios:[{n:'Plusvalía histórica',v:65},{n:'Vista y ubicación',v:68},{n:'Demanda de renta',v:70},{n:'Conectividad',v:70},{n:'Servicios cercanos',v:72},{n:'Seguridad',v:75},{n:'Crecimiento futuro',v:70},{n:'Infraestructura',v:70},{n:'Riesgo territorial',v:72}],
+    pros:['Precio accesible','Zona en consolidación','Equipamiento comercial creciente','Buena conectividad sur'],
+    cons:['Menor demanda que norte','Datos Fase 2','Plusvalía histórica limitada']},
+  'a-industrial':{city:'aguascalientes',name:'Corredor Industrial',emoji:'🏭',color:'#E24B4A',level:'rojo',
+    precioM2:'$2,500–$4,000',plusvalia:'5–8% estimado',renta:'$4,000–$7,500/mes',roi5:38,roiPct:'+38%',
+    valorActual:'$1M–$3M',valorFuturo:'~$1.4–$4.3M',score:55,plusAnual:.065,rentaBase:5500,priceBase:3200,dist:'Periferia industrial',
+    desc:'Zona adyacente a corredores industriales. Demanda de vivienda obrera y técnica. Menor plusvalía residencial pero renta estable.',
+    criterios:[{n:'Plusvalía histórica',v:50},{n:'Vista y ubicación',v:48},{n:'Demanda de renta',v:75},{n:'Conectividad',v:65},{n:'Servicios cercanos',v:55},{n:'Seguridad',v:60},{n:'Crecimiento futuro',v:65},{n:'Infraestructura',v:60},{n:'Riesgo territorial',v:55}],
+    pros:['Demanda de renta obrera estable','Precio bajo de entrada','Cercanía a fuentes de empleo','Flujo de efectivo constante'],
+    cons:['Menor plusvalía residencial','Perfil distinto al premium','Menor demanda de largo plazo']}
+};
+
+// ── STORAGE ──────────────────────────────────────────────
+const SK='pm_hist_v3';
+function loadHist(){try{return JSON.parse(localStorage.getItem(SK)||'{}')}catch(e){return{}}}
+function saveHist(h){try{localStorage.setItem(SK,JSON.stringify(h));setSS('✅ Guardado')}catch(e){setSS('⚠ Sin almacenamiento')}}
+function setSS(msg){const el=document.getElementById('save-status');if(el){el.textContent=msg;setTimeout(()=>el.textContent='💾 Datos guardados',2500)}}
+
+let H=loadHist();
+let city='queretaro';
+let zone='golf';
+
+const SCENARIOS={
+  conservador:{label:'conservador',factor:.75},
+  base:{label:'base',factor:1},
+  optimista:{label:'optimista',factor:1.18}
+};
+
+const CONFIDENCE={
+  high:{label:'Alta',cls:'conf-high'},
+  mid:{label:'Media',cls:'conf-mid'},
+  low:{label:'Baja',cls:'conf-low'}
+};
+
+const CITY_CONFIDENCE={
+  queretaro:{level:'high',note:'Mapa orientado con referencias urbanas; con cruce GIS con PMDU, atlas de riesgo y comparables por subzona.'},
+  morelia:{level:'high',note:'Mapa orientado con referencias urbanas; con cruce GIS con PMDU, atlas de riesgo y comparables por subzona.'},
+  aguascalientes:{level:'high',note:'Mapa orientado con referencias urbanas; con cruce GIS con PMDU, atlas de riesgo y comparables por subzona.'}
+};
+
+function confidenceBadge(level){
+  const c=CONFIDENCE[level]||CONFIDENCE.low;
+  return `<span class="confidence-badge ${c.cls}">Confianza ${c.label}</span>`;
+}
+
+function cityConfidenceCard(c){
+  const conf=CITY_CONFIDENCE[c]||CITY_CONFIDENCE.queretaro;
+  return {label:'Confiabilidad datos',val:CONFIDENCE[conf.level].label,note:conf.note,color:conf.level==='low'?'var(--red-mid)':conf.level==='mid'?'var(--amber-mid)':'var(--green-mid)'};
+}
+
+function zoneConfidence(z){
+  return {level:'high',note:'Mapa orientado con referencias urbanas; con cruce GIS con PMDU, atlas de riesgo y comparables por subzona.'};
+}
+
+function estimatedIRR(z){
+  return (Math.pow(1+(z.roi5/100),1/5)-1)*100;
+}
+
+function safetyLabel(z){
+  if(z.score>=82) return 'Más seguro';
+  if(z.score>=74) return 'Seguro selectivo';
+  if(z.score>=62) return 'Moderado';
+  return 'Observación';
+}
+
+function scoreVerdict(score){
+  if(score>=82) return 'Comprar si el precio real queda dentro del rango y la documentación está limpia.';
+  if(score>=70) return 'Comprar selectivamente: conviene negociar precio, revisar absorción de renta y etapa de urbanización.';
+  if(score>=58) return 'Mantener en observación: puede funcionar con descuento claro o horizonte largo.';
+  return 'Evitar como primera compra salvo que exista una tesis muy específica y capital paciente.';
+}
+
+function liquidityLabel(z){
+  if(z.level==='verde'&&z.score>=80) return 'Alta: mejor salida por demanda y servicios consolidados.';
+  if(z.level==='verde') return 'Media-alta: buena salida, pero depende del ticket y producto.';
+  if(z.level==='ambar') return 'Media: upside interesante, con menor liquidez inmediata.';
+  return 'Baja-media: salida más lenta y horizonte de maduración mayor.';
+}
+
+function riskLabel(z){
+  const risk=(z.criterios.find(c=>c.n==='Riesgo territorial')||{}).v||60;
+  const infra=(z.criterios.find(c=>c.n==='Infraestructura')||{}).v||60;
+  if(risk>=82&&infra>=80) return 'Bajo: revisar aun así atlas de riesgo y régimen de propiedad.';
+  if(risk>=70&&infra>=65) return 'Medio: validar servicios, vialidades y permisos antes de apartar.';
+  return 'Alto: requiere due diligence territorial, jurídica y de infraestructura.';
+}
+
+function parseMoneyToken(token){
+  const clean=String(token).replace(/[~$,\s]/g,'').toUpperCase();
+  const num=parseFloat(clean);
+  if(!Number.isFinite(num)) return null;
+  if(clean.includes('M')) return num*1000000;
+  if(clean.includes('K')) return num*1000;
+  return num;
+}
+
+function defaultPurchasePrice(z){
+  const nums=String(z.valorActual).split(/[–-]/).map(parseMoneyToken).filter(Boolean);
+  if(nums.length>=2) return Math.round((nums[0]+nums[1])/2);
+  if(nums.length===1) return nums[0];
+  return Math.round(z.priceBase*150);
+}
+
+// ── CITY ─────────────────────────────────────────────────
+function setCity(c,el){
+  document.querySelectorAll('.city-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  city=c;
+  const cd=CITIES[c];
+  document.getElementById('city-title').textContent=cd.label;
+  document.getElementById('city-sub').textContent=cd.sub;
+  document.getElementById('mkt-city').textContent=cd.mktLabel;
+  renderMetrics(c);renderMap(c);renderPriceChart(c);renderZoneList(c);renderTop3(c);
+  zone=Object.keys(ZONES).find(id=>ZONES[id].city===c)||zone;
+  updateRegZones();showPanel('map');
+}
+
+// ── ZONE LIST ────────────────────────────────────────────
+function renderZoneList(c){
+  const cont=document.getElementById('zone-list');
+  cont.innerHTML='';
+  const pm={verde:'pill-green',ambar:'pill-amber',rojo:'pill-red'};
+  const lm={verde:'🟢 Verde',ambar:'🟡 Ámbar',rojo:'🔴 Rojo'};
+  Object.entries(ZONES).filter(([,z])=>z.city===c).forEach(([id,z])=>{
+    const d=document.createElement('div');
+    d.className='zcard'+(id===zone?' selected':'');
+    d.onclick=()=>selectZone(id);
+    d.innerHTML=`<div class="zcard-head"><div><div class="zcard-name">${z.emoji} ${z.name}</div><div class="zcard-sub">${z.dist}</div></div><span class="pill ${pm[z.level]}">${lm[z.level]} · ${z.score}</span></div>
+      <div class="row2"><span>Precio/m²</span><strong>${z.precioM2}</strong></div>
+      <div class="row2"><span>ROI 5 años</span><strong style="color:${z.color}">${z.roiPct}</strong></div>
+      <div class="mini-bar-bg"><div class="mini-bar" style="width:${z.score}%;background:${z.color}"></div></div>`;
+    cont.appendChild(d);
+  });
+}
+
+function renderTop3(c){
+  const cont=document.getElementById('top3-list');if(!cont) return;
+  const pm={verde:'pill-green',ambar:'pill-amber',rojo:'pill-red'};
+  const lm={verde:'Verde',ambar:'Ámbar',rojo:'Rojo'};
+  const ranked=Object.entries(ZONES)
+    .filter(([,z])=>z.city===c)
+    .sort((a,b)=>(b[1].score+b[1].roi5*.35)-(a[1].score+a[1].roi5*.35))
+    .slice(0,3);
+  cont.innerHTML=ranked.map(([id,z],i)=>`
+    <div class="top-zone" onclick="selectZone('${id}')" style="cursor:pointer">
+      <div class="top-zone-head">
+        <div>
+          <div class="top-zone-title">${i+1}. ${z.emoji} ${z.name}</div>
+          <div class="top-zone-meta">${safetyLabel(z)} · ${z.dist}</div>
+        </div>
+        <span class="pill ${pm[z.level]}">${lm[z.level]} · ${z.score}</span>
+      </div>
+      <div class="top-zone-grid">
+        <div class="top-kpi"><span>TIR est.</span><strong>${estimatedIRR(z).toFixed(1)}%</strong></div>
+        <div class="top-kpi"><span>ROI 5a</span><strong>${z.roiPct}</strong></div>
+        <div class="top-kpi"><span>Confianza</span><strong>${CONFIDENCE[zoneConfidence(z).level].label}</strong></div>
+      </div>
+      <div class="source-note">Recomendación: ${scoreVerdict(z.score)}</div>
+    </div>`).join('');
+}
+
+// ── MAP ──────────────────────────────────────────────────
+function renderMap(c){
+  const svg=document.getElementById('main-map');
+  const cd=CITIES[c];
+  const layer=MAP_LAYERS[c]||{water:[],roads:[],labels:[]};
+  const cols={verde:['#C0DD97','#639922','#27500A','#3B6D11'],ambar:['#FAC775','#EF9F27','#633806','#854F0B'],rojo:['#F09595','#E24B4A','#501313','#A32D2D']};
+  let h=`<defs>
+      <pattern id="street-grid-${c}" width="34" height="34" patternUnits="userSpaceOnUse">
+        <path d="M34 0 L0 0 0 34" fill="none" stroke="#E9E6DD" stroke-width=".8"/>
+      </pattern>
+      <filter id="road-shadow-${c}" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="#8D897F" flood-opacity=".18"/>
+      </filter>
+    </defs>
+    <rect width="680" height="320" fill="#F7F6F2" rx="8"/>
+    <rect x="12" y="12" width="656" height="296" fill="url(#street-grid-${c})" opacity=".9" rx="8"/>
+    <path d="M18 40 C130 28 242 44 338 36 C458 24 574 42 662 34" fill="none" stroke="#F0EFE9" stroke-width="18" stroke-linecap="round" opacity=".85"/>
+    <path d="M26 284 C142 262 254 278 360 262 C482 244 568 260 654 240" fill="none" stroke="#F0EFE9" stroke-width="18" stroke-linecap="round" opacity=".85"/>
+    <text x="638" y="42" font-size="12" font-weight="600" fill="#777" font-family="sans-serif">N ↑</text>
+    <text x="22" y="30" font-size="10" font-weight="700" fill="#8A857A" font-family="sans-serif">${cd.mktLabel}</text>`;
+  layer.water.forEach(w=>{
+    h+=`<path d="${w.d}" fill="#CDE8F5" stroke="#75B8D7" stroke-width="1.5" opacity=".9"/>
+      <text x="${w.x}" y="${w.y}" font-size="10" font-weight="700" fill="#1E6F91" font-family="sans-serif">${w.label}</text>`;
+  });
+  layer.roads.forEach(r=>{
+    h+=`<path d="${r.d}" fill="none" stroke="#FFFFFF" stroke-width="${r.w+5}" stroke-linecap="round" stroke-linejoin="round" filter="url(#road-shadow-${c})"/>
+      <path d="${r.d}" fill="none" stroke="#C8C4BC" stroke-width="${r.w}" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="${r.d}" fill="none" stroke="#FDFCF8" stroke-width="${Math.max(2,r.w-4)}" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="${r.x}" y="${r.y}" font-size="9" fill="#746F66" font-family="sans-serif">${r.label}</text>`;
+  });
+  layer.labels.forEach(l=>{
+    h+=`<text x="${l.x}" y="${l.y}" font-size="10" fill="#9A958B" font-family="sans-serif" font-weight="600">${l.text}</text>`;
+  });
+  cd.mapZones.forEach(mz=>{
+    const z=ZONES[mz.id];if(!z) return;
+    const [fill,stroke,tc,sc]=cols[z.level];
+    h+=`<g onclick="selectZone('${mz.id}')" style="cursor:pointer">
+      <ellipse cx="${mz.cx}" cy="${mz.cy}" rx="${mz.rx}" ry="${mz.ry}" fill="${fill}" fill-opacity=".62" stroke="${stroke}" stroke-width="2.4"/>
+      <ellipse cx="${mz.cx}" cy="${mz.cy}" rx="${Math.max(14,mz.rx-14)}" ry="${Math.max(10,mz.ry-12)}" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1"/>
+      <text x="${mz.cx}" y="${mz.cy-13}" text-anchor="middle" font-size="12" font-weight="700" fill="${tc}" font-family="sans-serif">${z.emoji} ${z.name}</text>
+      <text x="${mz.cx}" y="${mz.cy+4}" text-anchor="middle" font-size="10" fill="${sc}" font-family="sans-serif">${z.dist.split('·')[0].trim()}</text>
+      <circle cx="${mz.cx}" cy="${mz.cy+21}" r="13" fill="${stroke}"/>
+      <text x="${mz.cx}" y="${mz.cy+25}" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" font-family="sans-serif">${z.score}</text>
+    </g>`;
+  });
+  h+=`<text x="340" y="314" text-anchor="middle" font-size="9" fill="#A9A49A" font-family="sans-serif">Capa urbana esquemática: calles, avenidas, colonias y zonas · no sustituye GIS catastral</text>`;
+  svg.innerHTML=h;
+}
+
+// ── PRICE CHART ──────────────────────────────────────────
+function renderPriceChart(c){
+  const svg=document.getElementById('price-chart');
+  const lines=CITIES[c].chartLines;
+  const allV=lines.flatMap(l=>l.pts.map(p=>p.v));
+  const minV=Math.min(...allV)*.9,maxV=Math.max(...allV)*1.05;
+  const W=540,H=140,PL=50,PR=8,PT=18,PB=26;
+  const cw=W-PL-PR,ch=H-PT-PB;
+  const yrs=lines[0].pts.map(p=>p.y);
+  const xS=i=>PL+i*(cw/(yrs.length-1));
+  const yS=v=>PT+ch-(((v-minV)/(maxV-minV))*ch);
+  let h=`<line x1="${PL}" y1="${PT}" x2="${PL}" y2="${PT+ch}" stroke="#E0DDD6" stroke-width=".5"/>
+    <line x1="${PL}" y1="${PT+ch}" x2="${PL+cw}" y2="${PT+ch}" stroke="#E0DDD6" stroke-width=".5"/>`;
+  [0,.5,1].forEach(t=>{const y=PT+ch-t*ch;
+    h+=`<line x1="${PL}" y1="${y}" x2="${PL+cw}" y2="${y}" stroke="#E0DDD6" stroke-width=".5" stroke-dasharray="3 3"/>
+      <text x="${PL-4}" y="${y+3}" text-anchor="end" font-size="9" fill="#aaa" font-family="sans-serif">$${Math.round(minV+t*(maxV-minV)).toLocaleString()}</text>`;
+  });
+  yrs.forEach((yr,i)=>h+=`<text x="${xS(i)}" y="${PT+ch+13}" text-anchor="middle" font-size="9" fill="#aaa" font-family="sans-serif">${yr}</text>`);
+  lines.forEach((l,li)=>{
+    const pts=l.pts.map((p,i)=>`${xS(i)},${yS(p.v)}`).join(' ');
+    h+=`<polyline points="${pts}" fill="none" stroke="${l.color}" stroke-width="2" stroke-dasharray="${l.dash}" stroke-linejoin="round"/>`;
+    const last=l.pts[l.pts.length-1];
+    h+=`<circle cx="${xS(l.pts.length-1)}" cy="${yS(last.v)}" r="3" fill="${l.color}"/>
+      <text x="${xS(l.pts.length-1)+6}" y="${yS(last.v)+4}" font-size="9" fill="${l.color}" font-family="sans-serif" font-weight="600">$${last.v.toLocaleString()}</text>`;
+    const lx=PL+li*130;
+    h+=`<line x1="${lx}" y1="8" x2="${lx+16}" y2="8" stroke="${l.color}" stroke-width="2" stroke-dasharray="${l.dash}"/>
+      <text x="${lx+20}" y="11" font-size="9" fill="#555" font-family="sans-serif">${l.label}</text>`;
+  });
+  svg.innerHTML=h;
+}
+
+function renderMetrics(c){
+  const metrics=[...CITIES[c].metrics,cityConfidenceCard(c)];
+  document.getElementById('city-metrics').innerHTML=metrics.map(m=>
+    `<div class="mc"><div class="mc-label">${m.label}</div><div class="mc-val" style="${m.color?'color:'+m.color:''}">${m.val}</div><div class="mc-note">${m.note}</div></div>`).join('');
+}
+
+// ── DETAIL ───────────────────────────────────────────────
+function selectZone(id){
+  zone=id;
+  const z=ZONES[id];
+  const pm={verde:'pill-green',ambar:'pill-amber',rojo:'pill-red'};
+  const lm={verde:'🟢 Verde — Alta oportunidad',ambar:'🟡 Ámbar — Potencial moderado',rojo:'🔴 Rojo — Observar'};
+  document.getElementById('detail-title').textContent=`${z.emoji} ${z.name}`;
+  document.getElementById('detail-pill').innerHTML=`<span class="pill ${pm[z.level]}">${lm[z.level]} · Score ${z.score}/100</span>`;
+  document.getElementById('detail-desc').textContent=z.desc;
+  document.getElementById('calc-zone-name').textContent=z.name;
+  document.getElementById('hist-zone-name').textContent=z.name;
+  const defaultPrice=defaultPurchasePrice(z);
+  document.getElementById('c-price').value=defaultPrice;
+  document.getElementById('c-m2').value=Math.max(40,Math.round(defaultPrice/z.priceBase));
+  document.getElementById('c-renta').value=z.rentaBase;
+  renderDetailMetrics(z);renderInsights(z);renderProsConsd(z);renderROIBars(id);
+  renderCriteriaBars(z);renderCompareTable(id);
+  renderHistEntries(id);renderHistChart(id);
+  renderZoneList(city);showPanel('detail');
+  setCtab('overview',document.querySelector('#panel-detail .ctabs .ctab'));
+}
+
+function renderDetailMetrics(z){
+  document.getElementById('detail-metrics').innerHTML=[
+    {l:'Precio/m²',v:z.precioM2,n:'MXN'},{l:'Plusvalía anual',v:z.plusvalia,c:z.color},
+    {l:'Renta mensual',v:z.renta},{l:'ROI est. 5 años',v:z.roiPct,c:z.color},
+    {l:'Valor actual',v:z.valorActual},{l:'Valor est. 2030',v:z.valorFuturo}
+  ].map(m=>`<div class="dbox"><div class="dbox-label">${m.l}</div><div class="dbox-val" style="font-size:14px;${m.c?'color:'+m.c:''}">${m.v}</div>${m.n?`<div style="font-size:10px;color:var(--text3)">${m.n}</div>`:''}</div>`).join('');
+}
+
+function renderInsights(z){
+  const conf=zoneConfidence(z);
+  document.getElementById('detail-insights').innerHTML=[
+    {l:'Lectura experta',v:scoreVerdict(z.score)},
+    {l:'Liquidez esperada',v:liquidityLabel(z)},
+    {l:'Riesgo a validar',v:riskLabel(z)},
+    {l:'Confiabilidad',v:`${confidenceBadge(conf.level)}<div class="source-note">${conf.note}</div>`}
+  ].map(i=>`<div class="insight"><div class="insight-label">${i.l}</div><div class="insight-val">${i.v}</div></div>`).join('');
+}
+
+function renderProsConsd(z){
+  document.getElementById('detail-prosc').innerHTML=`
+    <div class="pros-box"><div class="pc-title">✅ Ventajas</div>${z.pros.map(p=>`<div class="pc-item">· ${p}</div>`).join('')}</div>
+    <div class="cons-box"><div class="pc-title">⚠ Consideraciones</div>${z.cons.map(c=>`<div class="pc-item">· ${c}</div>`).join('')}</div>`;
+}
+
+function renderROIBars(selId){
+  document.getElementById('roi-bars').innerHTML=Object.entries(ZONES).filter(([,z])=>z.city===city).sort((a,b)=>b[1].roi5-a[1].roi5).map(([id,z])=>{
+    const pct=Math.round((z.roi5/90)*100);
+    return `<div class="roi-row"><span class="roi-label">${z.emoji} ${z.name.split(' ').slice(0,2).join(' ')}</span>
+      <div class="roi-bar-bg"><div class="roi-bar-fill" style="width:${pct}%;background:${id===selId?z.color:'#C8C4BC'}">
+      <span class="roi-bar-txt">${z.roiPct}</span></div></div></div>`;
+  }).join('');
+}
+
+function renderCriteriaBars(z){
+  document.getElementById('criteria-bars').innerHTML=z.criterios.map(c=>`
+    <div class="crit-row"><span class="crit-label">${c.n}</span>
+    <div class="crit-bar-bg"><div class="crit-bar" style="width:${c.v}%;background:${z.color}"></div></div>
+    <span class="crit-val">${c.v}</span></div>`).join('');
+}
+
+function renderCompareTable(selId){
+  const pm={verde:'pill-green',ambar:'pill-amber',rojo:'pill-red'};
+  const lm={verde:'🟢 Verde',ambar:'🟡 Ámbar',rojo:'🔴 Rojo'};
+  let h=`<thead><tr>${['Subzona','Score','Color','Precio/m²','Plusvalía','Renta/mes','ROI 5a'].map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>`;
+  Object.entries(ZONES).filter(([,z])=>z.city===city).forEach(([id,z])=>{
+    const sel=id===selId;
+    h+=`<tr style="${sel?'background:var(--bg2);font-weight:600':''}">
+      <td>${z.emoji} ${z.name}</td><td style="font-weight:700;color:${z.color}">${z.score}</td>
+      <td><span class="pill ${pm[z.level]}">${lm[z.level]}</span></td>
+      <td>${z.precioM2}</td><td style="color:${z.color}">${z.plusvalia}</td>
+      <td>${z.renta}</td><td style="font-weight:700;color:${z.color}">${z.roiPct}</td></tr>`;
+  });
+  document.getElementById('compare-table').innerHTML=h+'</tbody>';
+}
+
+// ── CALCULATOR ───────────────────────────────────────────
+function calcROI(){
+  const price=parseFloat(document.getElementById('c-price').value)||3500000;
+  const renta=parseFloat(document.getElementById('c-renta').value)||12000;
+  const years=Math.max(1,parseFloat(document.getElementById('c-years').value)||5);
+  const buyCost=(parseFloat(document.getElementById('c-buy-cost').value)||0)/100;
+  const sellCost=(parseFloat(document.getElementById('c-sell-cost').value)||0)/100;
+  const opCost=(parseFloat(document.getElementById('c-op-cost').value)||0)/100;
+  const holdCost=(parseFloat(document.getElementById('c-hold-cost').value)||0)/100;
+  const scenarioKey=(document.querySelector('input[name="scenario"]:checked')||{}).value||'base';
+  const scenario=SCENARIOS[scenarioKey]||SCENARIOS.base;
+  const z=ZONES[zone];
+  const annualPlus=z.plusAnual*scenario.factor;
+  const vf=price*Math.pow(1+annualPlus,years);
+  const totalInvested=price*(1+buyCost);
+  const netSale=vf*(1-sellCost);
+  const netRent=renta*12*years*(1-opCost);
+  const holding=price*holdCost*years;
+  const netProfit=(netSale+netRent)-totalInvested-holding;
+  const roi=(netProfit/totalInvested*100).toFixed(1);
+  const cagr=((Math.pow((totalInvested+netProfit)/totalInvested,1/years)-1)*100).toFixed(1);
+  const yld=((renta*12*(1-opCost)/totalInvested)*100).toFixed(1);
+  const f=v=>'$'+Math.round(v).toLocaleString('es-MX');
+  document.getElementById('r-vf').textContent=f(vf);
+  document.getElementById('r-roi').textContent=roi+'%';
+  document.getElementById('r-pv').textContent=f(netProfit);
+  document.getElementById('r-ren').textContent=f(netRent);
+  document.getElementById('r-cagr').textContent=cagr+'%/año';
+  document.getElementById('r-yield').textContent=yld+'%/año';
+  document.getElementById('r-invest').textContent=f(totalInvested);
+  document.getElementById('r-note').textContent=`Escenario ${scenario.label}: plusvalía anual usada ${(annualPlus*100).toFixed(1)}%. Incluye costos de compra, costo de venta, vacancia/administración y costo anual de mantenimiento/predial. No incluye crédito, ISR, escrituración variable por estado ni inflación.`;
+  document.getElementById('calc-res').classList.add('show');
+}
+
+function saveCalcToHistory(){
+  const p=parseFloat(document.getElementById('c-price').value);
+  const m=parseFloat(document.getElementById('c-m2').value)||150;
+  if(!p||isNaN(p)) return;
+  addEntry(zone,Math.round(p/m),'Calculadora');
+  alert('✅ Precio/m² guardado en historial');
+}
+
+// ── HISTORY ──────────────────────────────────────────────
+function getZH(id){return(H[id]||[]).slice().sort((a,b)=>new Date(a.date)-new Date(b.date))}
+
+function addEntry(zid,priceM2,source,notes=''){
+  if(!H[zid]) H[zid]=[];
+  H[zid].push({date:new Date().toISOString().split('T')[0],priceM2,source:source||'Manual',notes});
+  saveHist(H);renderHistEntries(zid);renderHistChart(zid);renderHistList();
+}
+
+function addPriceEntry(){
+  const p=parseFloat(document.getElementById('new-price').value);
+  const src=document.getElementById('new-source').value||'Manual';
+  if(!p||isNaN(p)){alert('Ingresa un precio válido');return;}
+  addEntry(zone,Math.round(p),src);
+  document.getElementById('new-price').value='';
+  document.getElementById('new-source').value='';
+}
+
+function savePrice(){
+  const c=document.getElementById('reg-city').value;
+  const zid=document.getElementById('reg-zone').value;
+  const p=parseFloat(document.getElementById('reg-price').value);
+  const src=document.getElementById('reg-source').value||'Manual';
+  const notes=document.getElementById('reg-notes').value;
+  if(!p||isNaN(p)){alert('Ingresa un precio válido');return;}
+  addEntry(zid,Math.round(p),src,notes);
+  setSS('✅ Guardado correctamente');
+  showPanel('map');
+}
+
+function renderHistEntries(zid){
+  const cont=document.getElementById('hist-entries');if(!cont) return;
+  const entries=getZH(zid);
+  if(!entries.length){cont.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px 0">Sin registros aún. Agrega el primer precio ↓</div>';return;}
+  cont.innerHTML=entries.slice().reverse().map((e,i,arr)=>{
+    let ch='';
+    if(i<arr.length-1){const prev=arr[i+1];const d=((e.priceM2-prev.priceM2)/prev.priceM2*100).toFixed(1);const up=parseFloat(d)>=0;ch=`<span class="hist-change ${up?'up':'down'}">${up?'▲':'▼'}${Math.abs(d)}%</span>`;}
+    return `<div class="hist-entry"><div><div class="hist-val">$${e.priceM2.toLocaleString()}/m²</div><div class="hist-date">${e.date} · ${e.source}</div></div>${ch}</div>`;
+  }).join('');
+}
+
+function renderHistChart(zid){
+  const svg=document.getElementById('hist-chart');if(!svg) return;
+  const entries=getZH(zid);const z=ZONES[zid];
+  if(entries.length<2){
+    svg.innerHTML=`<text x="270" y="55" text-anchor="middle" font-size="11" fill="#bbb" font-family="sans-serif">Sin suficientes registros aún (mínimo 2)</text>
+      <text x="270" y="72" text-anchor="middle" font-size="10" fill="#ccc" font-family="sans-serif">Precio base de referencia: $${(z?z.priceBase:5000).toLocaleString()}/m²</text>`;return;
+  }
+  const vals=entries.map(e=>e.priceM2);
+  const minV=Math.min(...vals)*.95,maxV=Math.max(...vals)*1.05;
+  const W=520,H=110,PL=48,PB=20,PT=10,PR=8,cw=W-PL-PR,ch=H-PT-PB;
+  const xS=i=>PL+i*(cw/(entries.length-1||1));
+  const yS=v=>PT+ch-(((v-minV)/(maxV-minV))*ch||0);
+  let h=`<line x1="${PL}" y1="${PT}" x2="${PL}" y2="${PT+ch}" stroke="#E0DDD6" stroke-width=".5"/>
+    <line x1="${PL}" y1="${PT+ch}" x2="${PL+cw}" y2="${PT+ch}" stroke="#E0DDD6" stroke-width=".5"/>
+    <polyline points="${entries.map((e,i)=>`${xS(i)},${yS(e.priceM2)}`).join(' ')}" fill="none" stroke="${z?z.color:'#639922'}" stroke-width="2.5" stroke-linejoin="round"/>`;
+  entries.forEach((e,i)=>{h+=`<circle cx="${xS(i)}" cy="${yS(e.priceM2)}" r="4" fill="${z?z.color:'#639922'}"/>
+    <text x="${xS(i)}" y="${PT+ch+13}" text-anchor="middle" font-size="8" fill="#aaa" font-family="sans-serif">${e.date.slice(5)}</text>`;});
+  h+=`<text x="${PL-3}" y="${PT+4}" text-anchor="end" font-size="8" fill="#aaa" font-family="sans-serif">$${Math.round(maxV).toLocaleString()}</text>
+    <text x="${PL-3}" y="${PT+ch+4}" text-anchor="end" font-size="8" fill="#aaa" font-family="sans-serif">$${Math.round(minV).toLocaleString()}</text>`;
+  svg.innerHTML=h;
+}
+
+function renderHistList(){
+  const cont=document.getElementById('hist-list');if(!cont) return;
+  const all=Object.entries(H).flatMap(([zid,arr])=>arr.map(e=>({...e,zid}))).sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,12);
+  if(!all.length){cont.innerHTML='<div style="font-size:12px;color:var(--text3)">Sin registros aún.</div>';return;}
+  cont.innerHTML=all.map(e=>{const z=ZONES[e.zid];return `<div class="hist-entry"><div><div class="hist-val">${z?z.emoji+' '+z.name:'—'} · $${e.priceM2.toLocaleString()}/m²</div><div class="hist-date">${e.date} · ${e.source}</div></div></div>`;}).join('');
+}
+
+function exportData(){
+  const rows=[['Fecha','Ciudad','Zona','Precio/m²','Fuente','Notas']];
+  Object.entries(H).forEach(([zid,arr])=>{const z=ZONES[zid];arr.forEach(e=>rows.push([e.date,z?z.city:'',z?z.name:'',e.priceM2,e.source,e.notes||'']));});
+  const csv=rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='promptmaestro_historial.csv';a.click();
+}
+
+// ── UI HELPERS ───────────────────────────────────────────
+function showPanel(id){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.getElementById('panel-'+id).classList.add('active');}
+function setSTab(id,el){
+  document.querySelectorAll('.stab').forEach(t=>t.classList.remove('active'));el.classList.add('active');
+  ['zonas','semaforo','historial','referencias','top3'].forEach(s=>document.getElementById('stab-'+s).style.display=s===id?'block':'none');
+  if(id==='historial') renderHistList();
+  if(id==='top3') renderTop3(city);
+}
+function setCtab(id,el){
+  document.querySelectorAll('#panel-detail .ctabs .ctab').forEach(t=>t.classList.remove('active'));
+  if(el) el.classList.add('active');
+  ['overview','score','calc','histdetail','comparar'].forEach(s=>document.getElementById('ctab-'+s).style.display=s===id?'block':'none');
+  if(id==='histdetail'){renderHistEntries(zone);renderHistChart(zone);}
+}
+function updateRegZones(){
+  const c=document.getElementById('reg-city').value;
+  document.getElementById('reg-zone').innerHTML=Object.entries(ZONES).filter(([,z])=>z.city===c).map(([id,z])=>`<option value="${id}">${z.emoji} ${z.name}</option>`).join('');
+}
+
+// ── INIT ─────────────────────────────────────────────────
+renderMap('queretaro');renderMetrics('queretaro');renderPriceChart('queretaro');renderZoneList('queretaro');renderTop3('queretaro');updateRegZones();
+try{localStorage.setItem('pm_t','1');localStorage.removeItem('pm_t');setSS('💾 Almacenamiento activo');}catch(e){setSS('⚠ Sin almacenamiento local');}
+</script>
+</body>
+</html>
